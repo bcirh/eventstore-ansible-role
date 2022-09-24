@@ -55,9 +55,9 @@ CommitTimeoutMs: {{ commit_timeout_ms }}
 
 # Cluster gossip
 ClusterSize: {{ cluster_size }}
-{% if cluster_dns is defined %}
+{% if eventstore_cluster_dns is defined %}
 DiscoverViaDns: true
-ClusterDns: {{ cluster_dns }}
+ClusterDns: {{ eventstore_cluster_dns }}
 {% else %}
 DiscoverViaDns: false
 GossipSeed: {{ gossip_ip }} 

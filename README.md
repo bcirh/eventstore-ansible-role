@@ -2,8 +2,9 @@ Ansible Role: Eventstore
 =========
 
 This is Ansible role provides automatic configuration of [EventStore](https://www.eventstore.com/).
+
 **This is work in progress and it's only for learning.**
-**Please don't use this playbook in production environment.**
+**Please don't use this role in production environment.**
 
 Requirements
 ------------
@@ -25,8 +26,8 @@ Role Variables
 | cluster_size | Default = 3 | Number of Eventstore nodes |
 | read_only_replica | Default = None | Set read only replica |
 | no_of_open_files | Default = 32768 | Number of open files allowed on linux host. |
-| cluster_dns | Default = None | Use dns server discovery. |
-| wildcard_dns | Default = None | *example: *.cluster.example.com* |
+| eventstore_cluster_dns | Default = None | Use dns server discovery. |
+| eventstore_wildcard_dns | Default = None | *example:* `*.cluster.example.com` |
 | cron_scavange_day | Default = None **(Acceptable values are 0-6)** | Set the scavange day for cron job. If this variable is not defined value for day will be random |
 | int_tcp_heartbeat_interval | Default = None | Eventstore heartbeat interval **Note:** When variable is not defined Event Store default value will be used |
 | int_tcp_heartbeat_timeout | Default = None | Eventstore heartbeat timeout **Note:** When variable is not defined Event Store default value will be used |
@@ -60,8 +61,8 @@ eventstore_version = "21.10.5"
 insecure=false
 es_user=admin
 es_password=changeit
-cluster_dns=eventstore.cluster.example.dns
-wildcard_dns=*.cluster.example.dns
+eventstore_cluster_dns=eventstore.cluster.example.dns
+eventstore_wildcard_dns=*.cluster.example.dns
 
 [read_only:vars]
 read_only_replica=true

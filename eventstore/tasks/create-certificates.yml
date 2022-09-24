@@ -47,19 +47,19 @@
   command: "/tmp/es-gencert-cli create-node -ca-certificate ~/certs/ca/ca.crt -ca-key ~/certs/ca/ca.key -out ~/certs/{{ item }}  -ip-addresses {{ item }}"
   delegate_to: 127.0.0.1
   with_items: "{{ ansible_default_ipv4.address }}"
-  when: cluster_dns is not defined
+  when: eventstore_cluster_dns is not defined
   
 - name: Generate certificates for each node
-  command: "/tmp/es-gencert-cli create-node -ca-certificate ~/certs/ca/ca.crt -ca-key ~/certs/ca/ca.key -out ~/certs/{{ item }}  -ip-addresses {{ item }} -dns-names {{ cluster_dns }}"
+  command: "/tmp/es-gencert-cli create-node -ca-certificate ~/certs/ca/ca.crt -ca-key ~/certs/ca/ca.key -out ~/certs/{{ item }}  -ip-addresses {{ item }} -dns-names {{ eventstore_cluster_dns }}"
   delegate_to: 127.0.0.1
   with_items: "{{ ansible_default_ipv4.address }}"
-  when: cluster_dns is defined
+  when: eventstore_cluster_dns is defined
 
 - name: Generate wildcard certificates for each node
-  command: "/tmp/es-gencert-cli create-node -ca-certificate ~/certs/ca/ca.crt -ca-key ~/certs/ca/ca.key -out ~/certs/{{ item }} -dns-names {{ wildcard_dns }}"
+  command: "/tmp/es-gencert-cli create-node -ca-certificate ~/certs/ca/ca.crt -ca-key ~/certs/ca/ca.key -out ~/certs/{{ item }} -dns-names {{ eventstore_wildcard_dns }}"
   delegate_to: 127.0.0.1
   with_items: "{{ ansible_default_ipv4.address }}"
-  when: wildcard_dns is defined and eventstore_version is version_compare('20.10.5', '>=')
+  when: eventstore_wildcard_dns is defined and eventstore_version is version_compare('20.10.5', '>=')
 
 - name: Generate PEM CA certificate
   shell: "cat ~/certs/ca/ca.crt ~/certs/ca/ca.key > ~/certs/ca/ca.pem"

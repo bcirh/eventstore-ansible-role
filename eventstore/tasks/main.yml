@@ -29,7 +29,7 @@
     regexp: "({{ ansible_default_ipv4.address }}:2113)\\D"
     replace: ''
   become: yes
-  when: cluster_dns is not defined
+  when: eventstore_cluster_dns is not defined
 
 - name: Increase number of open file on EventStore service
   lineinfile:
