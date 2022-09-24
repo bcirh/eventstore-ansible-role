@@ -1,0 +1,70 @@
+- name: Remove previous certs directory
+  file: 
+    path: ~/certs
+    state: absent
+  run_once: true
+  delegate_to: 127.0.0.1
+
+- name: Make directory for certificates creation
+  file:
+    path: ~/certs
+    state: directory
+  delegate_to: 127.0.0.1
+
+- name: Make directory for EventStoreDB certificates
+  file:
+    path: /etc/eventstore/certs
+    owner: eventstore
+    group: eventstore
+    state: directory
+  become: yes
+
+- name: Make directory for EventStoreDB CA certificates
+  file:
+    path: /etc/eventstore/certs/ca
+    owner: eventstore
+    group: eventstore
+    state: directory
+  become: yes
+
+- name: Download es-gencert-cli
+  get_url:
+    url: https://github.com/EventStore/es-gencert-cli/releases/download/{{ es_gencert_cli_version }}/es-gencert-cli_{{ es_gencert_cli_version }}_Linux-x86_64.tar.gz
+    dest: ~/
+  delegate_to: 127.0.0.1
+    
+- name: Unpack es-gencert-cli
+  unarchive:
+    src: ~/es-gencert-cli_{{ es_gencert_cli_version }}_Linux-x86_64.tar.gz
+    dest: /tmp
+  delegate_to: 127.0.0.1
+
+- name: Generate main certificate
+  command: "/tmp/es-gencert-cli create-ca -out ~/certs/ca"
+  delegate_to: 127.0.0.1
+
+- name: Generate certificates for each node
+  command: "/tmp/es-gencert-cli create-node -ca-certificate ~/certs/ca/ca.crt -ca-key ~/certs/ca/ca.key -out ~/certs/{{ item }}  -ip-addresses {{ item }}"
+  delegate_to: 127.0.0.1
+  with_items: "{{ ansible_default_ipv4.address }}"
+  when: cluster_dns is not defined
+  
+- name: Generate certificates for each node
+  command: "/tmp/es-gencert-cli create-node -ca-certificate ~/certs/ca/ca.crt -ca-key ~/certs/ca/ca.key -out ~/certs/{{ item }}  -ip-addresses {{ item }} -dns-names {{ cluster_dns }}"
+  delegate_to: 127.0.0.1
+  with_items: "{{ ansible_default_ipv4.address }}"
+  when: cluster_dns is defined
+
+- name: Generate wildcard certificates for each node
+  command: "/tmp/es-gencert-cli create-node -ca-certificate ~/certs/ca/ca.crt -ca-key ~/certs/ca/ca.key -out ~/certs/{{ item }} -dns-names {{ wildcard_dns }}"
+  delegate_to: 127.0.0.1
+  with_items: "{{ ansible_default_ipv4.address }}"
+  when: wildcard_dns is defined and eventstore_version is version_compare('20.10.5', '>=')
+
+- name: Generate PEM CA certificate
+  shell: "cat ~/certs/ca/ca.crt ~/certs/ca/ca.key > ~/certs/ca/ca.pem"
+  delegate_to: 127.0.0.1
+
+- name: Generate PFX CA certificate
+  shell: "openssl pkcs12 -export -in ~/certs/ca/ca.pem -out ~/certs/ca/esdb.pfx -passout pass:"
+  delegate_to: 127.0.0.1

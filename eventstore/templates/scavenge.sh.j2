@@ -1,0 +1,57 @@
+#!/bin/bash
+{% if format_managed_disks|bool %}
+LAST_CHUNK=$(ls /var/lib/eventstore_data/ | grep -Eo '[0-9]{0,}' | sort -u | sed 's/^0*//' | tail -1)
+FILE_NO=$(find /var/lib/eventstore_data/ -mtime -9 -ls | grep -o chunk | wc -l)
+{% else %}
+LAST_CHUNK=$(ls /var/lib/eventstore/ | grep -Eo '[0-9]{0,}' | sort -u | sed 's/^0*//' | tail -1)
+FILE_NO=$(find /var/lib/eventstore/ -mtime -9 -ls | grep -o chunk | wc -l)
+{% endif %}
+START_CHUNK=$(($LAST_CHUNK-$FILE_NO))
+
+# Start scavenge
+function start_scavenge {
+if [ "$FILE_NO" -gt "$LAST_CHUNK" ]
+then
+{% if insecure|bool %}
+curl -k -X POST http://{{ ansible_default_ipv4.address }}:2113/admin/scavenge -u "{{ es_user }}:{{ es_password }}"
+{% else %}
+curl -k -X POST https://{{ ansible_default_ipv4.address }}:2113/admin/scavenge -u "{{ es_user }}:{{ es_password }}"
+{% endif %}
+else
+{% if insecure|bool %}
+curl -k -X POST http://{{ ansible_default_ipv4.address }}:2113/admin/scavenge?startFromChunk=$START_CHUNK -u "{{ es_user }}:{{ es_password }}"
+{% else %}
+curl -k -X POST https://{{ ansible_default_ipv4.address }}:2113/admin/scavenge?startFromChunk=$START_CHUNK -u "{{ es_user }}:{{ es_password }}"
+{% endif %}
+fi
+}
+
+# Check node status
+{% if insecure|bool %}
+NODE_STATUS=$(curl -k -X GET http://{{ ansible_default_ipv4.address }}:2113/gossip | jq '.members[] | select(.internalTcpIp=="{{ ansible_default_ipv4.address }}").state')
+{% else %}
+NODE_STATUS=$(curl -k -X GET https://{{ ansible_default_ipv4.address }}:2113/gossip | jq '.members[] | select(.internalTcpIp=="{{ ansible_default_ipv4.address }}").state')
+{% endif %}
+
+if [ "$NODE_STATUS" != "\"Leader\"" ]
+then
+  start_scavenge
+else
+  sudo systemctl restart eventstore
+{% if insecure|bool %}
+  NODE_STATUS=$(curl -k -X GET http://{{ ansible_default_ipv4.address }}:2113/gossip | jq '.members[] | select(.internalTcpIp=="{{ ansible_default_ipv4.address }}").state')
+{% else %}
+  NODE_STATUS=$(curl -k -X GET https://{{ ansible_default_ipv4.address }}:2113/gossip | jq '.members[] | select(.internalTcpIp=="{{ ansible_default_ipv4.address }}").state')
+{% endif %}
+until [ "$NODE_STATUS" = "\"Follower\"" ]
+do
+  echo "Node is not alive!"
+  sleep 120
+{% if insecure|bool %}
+  NODE_STATUS=$(curl -k -X GET http://{{ ansible_default_ipv4.address }}:2113/gossip | jq '.members[] | select(.internalTcpIp=="{{ ansible_default_ipv4.address }}").state')
+{% else %}
+  NODE_STATUS=$(curl -k -X GET https://{{ ansible_default_ipv4.address }}:2113/gossip | jq '.members[] | select(.internalTcpIp=="{{ ansible_default_ipv4.address }}").state')
+{% endif %}
+done
+  start_scavenge
+fi

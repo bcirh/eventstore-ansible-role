@@ -1,0 +1,22 @@
+- name: Copy scavenge.sh
+  template:
+    src: scavenge.sh.j2
+    dest: ~/scavenge.sh
+
+- name: Schedule Scavenge for ESDB random day.
+  cron:
+    name: ESDB Scavenge
+    weekday: "{{ 6 | random(start=0) }}"
+    minute: "25"
+    hour: "23"
+    job: 'bash ~/scavenge.sh'
+  when: cron_scavange_day is not defined
+
+- name: Schedule Scavenge for ESDB fixed day.
+  cron:
+    name: ESDB Scavenge
+    weekday: "{{ cron_scavange_day | string }}"
+    minute: "25"
+    hour: "23"
+    job: 'bash ~/scavenge.sh'
+  when: cron_scavange_day is defined

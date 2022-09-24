@@ -1,0 +1,73 @@
+---
+# Paths
+{# {% if format_managed_disks|bool %}
+Db: /var/lib/eventstore_data
+Index: /var/lib/eventstore_data/index
+{% else %}
+Db: /var/lib/eventstore
+Index: /var/lib/eventstore/index
+{% endif %} #}
+Log: /var/log/eventstore
+
+{% if insecure|bool %}
+Insecure: true
+{% else %}
+CertificateFile: /etc/eventstore/certs/node.crt
+CertificatePrivateKeyFile: /etc/eventstore/certs/node.key
+TrustedRootCertificatesPath: /etc/eventstore/certs/ca
+{% endif %}
+
+{% if read_only_replica is defined %}
+# ReadOnly Replica
+ReadOnlyReplica: true
+{% endif %}
+
+# Network configuration
+IntIp: {{ ansible_default_ipv4.address }}
+ExtIp: {{ ansible_default_ipv4.address }}
+HttpPort: 2113
+IntTcpPort: {{ int_tcp_port }}
+ExtTcpPort: {{ ext_tcp_port }}
+{# {% if eventstore_version is version_compare('20.10.5', '>=') %}
+AdvertiseHostToClientAs: {{ inventory_hostname }}
+{% endif %} #}
+{% if enable_external_tcp|bool %}
+EnableExternalTcp: true
+{% elif not enable_external_tcp|bool %}
+EnableExternalTcp: false
+{% endif %}
+{% if enable_atom_pub_over_http|bool %}
+EnableAtomPubOverHTTP: true
+{% elif not enable_atom_pub_over_http|bool %}
+EnableAtomPubOverHTTP: false
+{% endif %}
+
+{% if int_tcp_heartbeat_timeout is defined and int_tcp_heartbeat_interval is defined %}
+# HeartBeat Timeout
+IntTcpHeartbeatTimeout: {{ int_tcp_heartbeat_timeout }}
+IntTcpHeartbeatInterval: {{ int_tcp_heartbeat_interval }}
+{% endif %}
+
+{% if commit_timeout_ms is defined %}
+# Commit Timeout
+CommitTimeoutMs: {{ commit_timeout_ms }}
+{% endif %}
+
+# Cluster gossip
+ClusterSize: {{ cluster_size }}
+{% if cluster_dns is defined %}
+DiscoverViaDns: true
+ClusterDns: {{ cluster_dns }}
+{% else %}
+DiscoverViaDns: false
+GossipSeed: {{ gossip_ip }} 
+{% endif %}
+
+# Projections configuration
+{% if run_projections == "All" %}
+RunProjections: All
+{% elif run_projections == "System" %}
+RunProjections: System
+{% else %}
+RunProjections: None
+{% endif %}
