@@ -1,14 +1,11 @@
 ---
-# defaults file for eventstore-playbook
+# defaults file for eventstore-role
 
 ### Certificate generator tool version
 es_gencert_cli_version: "1.1.0"
 
 insecure: false
 cluster_size: 3
-
-### This variable is obsolete 
-#http_port: '2113'
 
 int_tcp_port: 1112
 ext_tcp_port: 1113

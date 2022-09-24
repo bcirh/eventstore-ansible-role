@@ -28,9 +28,7 @@ ExtIp: {{ ansible_default_ipv4.address }}
 HttpPort: 2113
 IntTcpPort: {{ int_tcp_port }}
 ExtTcpPort: {{ ext_tcp_port }}
-{# {% if eventstore_version is version_compare('20.10.5', '>=') %}
-AdvertiseHostToClientAs: {{ inventory_hostname }}
-{% endif %} #}
+
 {% if enable_external_tcp|bool %}
 EnableExternalTcp: true
 {% elif not enable_external_tcp|bool %}
