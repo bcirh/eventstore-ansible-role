@@ -1,0 +1,26 @@
+- name: Copy common CA certificate on {{ ansible_play_hosts }}
+  copy:
+    src: "~/certs/ca/ca.crt"
+    dest: /etc/eventstore/certs/ca/ca.crt
+    owner: eventstore
+    group: eventstore
+    mode: "600"
+  become: yes
+
+- name: Copy node crt on {{ ansible_play_hosts }}
+  copy:
+    src: "~/certs/{{ ansible_default_ipv4.address }}/node.crt"
+    dest: /etc/eventstore/certs/node.crt
+    owner: eventstore
+    group: eventstore
+    mode: "600"
+  become: yes
+
+- name: Copy node key on {{ ansible_play_hosts }}
+  copy:
+    src: "~/certs/{{ ansible_default_ipv4.address }}/node.key"
+    dest: /etc/eventstore/certs/node.key
+    owner: eventstore
+    group: eventstore
+    mode: "600"
+  become: yes

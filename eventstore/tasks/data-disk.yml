@@ -1,0 +1,63 @@
+- name: Make directory for EventStore on data disk.
+  file:
+    path: /var/lib/eventstore_data
+    owner: eventstore
+    group: eventstore
+    state: directory
+  become: yes
+
+- name: Make directory for EventStore index on data disk.
+  file:
+    path: /var/lib/eventstore_data/index
+    owner: eventstore
+    group: eventstore
+    state: directory
+  become: yes
+
+- name: Get Disk Path
+  shell: |
+    lsblk --fs --json | jq -r '.blockdevices[] | select(.children == null and .fstype == null) | .name'| grep -i "sd"
+  register: result
+
+- name: Store Data Disk Path
+  set_fact: disk_path={{result.stdout}}
+
+- name: Format data disk
+  filesystem:
+    fstype: ext4
+    dev: /dev/{{ disk_path }}
+  become: yes
+
+- name: Get Data Disk UUID
+  shell: | 
+    lsblk -f | grep {{ disk_path }} | awk '{print $3}'
+  register: result
+  become: yes
+
+- name: Store Managed Disk UUID
+  set_fact: disk_uuid={{result.stdout}}
+
+- name: Mount formated disk
+  mount:
+    path: /var/lib/eventstore_data
+    src: UUID={{ disk_uuid }}
+    fstype: ext4
+    opts: defaults,nofail
+    state: mounted
+  become: yes
+
+- name: Take ownership of directory for EventStore on data disk.
+  file:
+    path: /var/lib/eventstore_data
+    owner: eventstore
+    group: eventstore
+    state: directory
+  become: yes
+
+- name: Take ownership of directory for EventStoreDB index on data disk.
+  file:
+    path: /var/lib/eventstore_data/index
+    owner: eventstore
+    group: eventstore
+    state: directory
+  become: yes

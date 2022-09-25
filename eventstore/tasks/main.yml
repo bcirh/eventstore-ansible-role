@@ -1,0 +1,62 @@
+---
+- name: Download EventStoreDB repo
+  get_url:
+    url:  "https://packagecloud.io/install/repositories/EventStore/EventStore-OSS/script.deb.sh"
+    dest: ~/
+
+- name: Add EventStoreDB repo
+  command: "bash script.deb.sh"
+  become: yes
+
+- name: Install EventStoreDB
+  command: "apt install eventstore-oss={{ eventstore_version }} -y --allow-downgrades"
+  become: yes
+
+- name: Install jq
+  apt:
+    pkg: "jq"
+  become: yes
+
+- name: Format data disk
+  include_tasks: data-disk.yml
+  when: eventstore_data_disk|bool
+
+- name: Copy eventstore.conf
+  template:
+    src: eventstore.conf.j2
+    dest: /etc/eventstore/eventstore.conf
+  become: yes
+
+- name: Delete excess ip adresses from gossip ip
+  replace: 
+    path: /etc/eventstore/eventstore.conf
+    regexp: "({{ ansible_default_ipv4.address }}:2113)\\D"
+    replace: ''
+  become: yes
+  when: eventstore_cluster_dns is not defined
+
+- name: Increase number of open file on EventStore service
+  lineinfile:
+    dest: "/usr/lib/systemd/system/eventstore.service"
+    regexp: "^LimitNOFILE="
+    line: "LimitNOFILE={{ no_of_open_files }}"
+  when: no_of_open_files > "32768"
+  become: yes
+
+- name: Install self-signed certificates
+  include_tasks: create-certificates.yml
+  when: not insecure|bool
+
+- name: Copy certificates
+  include_tasks: copy-certificates.yml
+  when: not insecure|bool
+
+- name: ESDB Scavenge
+  include_tasks: scavenge.yml
+
+- name: Start and enable eventstore service
+  service:
+    name: eventstore
+    state: restarted
+    enabled: yes
+  become: yes
