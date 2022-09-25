@@ -4,6 +4,7 @@ Ansible Role: Eventstore
 This is Ansible role provides automatic configuration of [EventStore](https://www.eventstore.com/).
 
 **This is work in progress and it's only for learning.**
+
 **Please don't use this role in production environment.**
 
 Requirements
@@ -16,7 +17,8 @@ Role Variables
 
 | Name | Value | Description |
 |---|---|---|
-| insecure | Default = false | When `false` installs Eventstore with certificates |
+| eventstore_data_disk | Default = false | Use separate disk for Eventstore data |
+| insecure | Default = false | When `false` configures Eventstore with certificates |
 | eventstore_version | Default = "21.10.5" | Eventstore version |
 | int_tcp_port | Default = 1112  | Eventstore internal tcp port |
 | ext_tcp_port | Default = 1113  | Eventstore external tcp port  |

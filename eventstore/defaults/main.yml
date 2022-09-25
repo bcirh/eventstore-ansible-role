@@ -17,5 +17,7 @@ eventstore_version: "21.10.5"
 
 no_of_open_files: "32768"
 
+eventstore_data_disk: false
+
 ### Not the greatest solution. Depends on eth0
 gossip_ip: "{{ groups['es_cluster'] | map('extract', hostvars, ['ansible_eth0', 'ipv4', 'address']) | join(':2113,') }}:2113"

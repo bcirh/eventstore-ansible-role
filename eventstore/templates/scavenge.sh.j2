@@ -1,5 +1,5 @@
 #!/bin/bash
-{% if format_managed_disks|bool %}
+{% if eventstore_data_disk|bool %}
 LAST_CHUNK=$(ls /var/lib/eventstore_data/ | grep -Eo '[0-9]{0,}' | sort -u | sed 's/^0*//' | tail -1)
 FILE_NO=$(find /var/lib/eventstore_data/ -mtime -9 -ls | grep -o chunk | wc -l)
 {% else %}

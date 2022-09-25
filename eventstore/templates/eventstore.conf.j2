@@ -1,12 +1,12 @@
 ---
 # Paths
-{# {% if format_managed_disks|bool %}
+{% if eventstore_data_disk|bool %}
 Db: /var/lib/eventstore_data
 Index: /var/lib/eventstore_data/index
 {% else %}
 Db: /var/lib/eventstore
 Index: /var/lib/eventstore/index
-{% endif %} #}
+{% endif %}
 Log: /var/log/eventstore
 
 {% if insecure|bool %}

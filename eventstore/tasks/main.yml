@@ -17,6 +17,10 @@
     pkg: "jq"
   become: yes
 
+- name: Format data disk
+  include_tasks: data-disk.yml
+  when: eventstore_data_disk|bool
+
 - name: Copy eventstore.conf
   template:
     src: eventstore.conf.j2
